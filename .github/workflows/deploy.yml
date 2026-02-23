@@ -1,0 +1,65 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [ "development" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/scrape2sheets-backend:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Deploy application on VPS
+        run: |
+          # Create directory if it doesn't exist (using -o StrictHostKeyChecking=no)
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "mkdir -p ~/scrape2sheets"
+
+          # Copy docker-compose.yml
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:~/scrape2sheets/docker-compose.yml
+
+          # Deploy
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e
+            cd ~/scrape2sheets
+
+            echo "🐳 Stop to ensure clean state"
+            docker compose down || true
+
+            echo "🗑 Remove old backend image"
+            docker rmi -f ${{ secrets.DOCKERHUB_USERNAME }}/scrape2sheets-backend:latest || true
+
+            echo "🐳 Run containers"
+            docker compose up -d
+
+            echo "🧹 Cleanup unused images"
+            docker image prune -f
+
+            echo "✅ Deployment completed"
+          EOF

@@ -1,0 +1,53 @@
+services:
+  backend:
+    image: 20979006hr/scrape2sheets-backend:latest
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+      # Add other environment variables as needed or use env_file
+      # - SUPABASE_URL=${SUPABASE_URL}
+      # - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      # - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      # - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      # - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      # - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      # - FRONTEND_URL=${FRONTEND_URL}
+      # - GEMINI_API_KEY=${GEMINI_API_KEY}
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - scrape-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scrape-network
+    volumes:
+      - redis-data:/data
+
+networks:
+  scrape-network:
+    driver: bridge
+
+volumes:
+  redis-data:

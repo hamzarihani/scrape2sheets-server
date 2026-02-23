@@ -1,0 +1,22 @@
+# Nixpacks Configuration for Railway
+# This file tells Railway/Nixpacks how to build and run the backend
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = [
+  "npm ci --only=production"
+]
+
+[phases.build]
+cmds = [
+  "mkdir -p logs"
+]
+
+[start]
+cmd = "node server.js"
+
+[variables]
+NODE_ENV = "production"
+
