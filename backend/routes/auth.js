@@ -23,7 +23,7 @@ router.get('/google/url', async (req, res) => {
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
-        scopes: 'email profile https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+        scopes: 'email profile https://www.googleapis.com/auth/drive.file',
         queryParams: {
           access_type: 'offline',
           prompt: 'consent'
