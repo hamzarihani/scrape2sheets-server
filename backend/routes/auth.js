@@ -45,8 +45,7 @@ router.get('/google/url', async (req, res) => {
       success: true,
       url: data.url
     });
-    logger.info('[Auth] Response OAuth data:', data);
-    logger.info('[Auth] Response OAuth URL:', data.url);
+
   } catch (error) {
     logger.error('[Auth] Exception generating OAuth URL:', error);
     res.status(500).json({
