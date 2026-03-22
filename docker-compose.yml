@@ -1,8 +1,8 @@
 services:
   backend:
     image: 20979006hr/scrape2sheets-backend:latest
-    ports:
-      - "4000:4000"
+    expose:
+      - "4000"   # internal only
     environment:
       - NODE_ENV=development
       - REDIS_URL=redis://redis:6379
@@ -33,8 +33,8 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"   # internal only
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
